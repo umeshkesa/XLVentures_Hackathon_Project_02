@@ -1,6 +1,7 @@
 """FastAPI application factory."""
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from adip import __version__
 from adip.api.rest.openapi import configure_openapi as configure_rest_openapi
@@ -21,6 +22,15 @@ def create_application() -> FastAPI:
         title=settings.app.name,
         version=__version__,
         debug=settings.app.debug,
+    )
+    # CORSMiddleware must be the outermost middleware to ensure CORS headers
+    # are set even when downstream handlers throw exceptions.
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.api.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
     register_middleware(application, environment=settings.app.environment)
     register_exception_handlers(application)
