@@ -1,0 +1,2 @@
+"""CRM tool connector placeholder."""
+

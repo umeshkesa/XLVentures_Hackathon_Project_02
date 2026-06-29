@@ -1,0 +1,7 @@
+Energy Efficiency Best Practices
+
+1. Monitor energy consumption continuously.
+2. Optimize equipment operating schedules.
+3. Identify energy-intensive assets.
+4. Reduce idle equipment operation.
+5. Review energy reports periodically.

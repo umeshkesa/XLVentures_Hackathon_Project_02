@@ -1,0 +1,2 @@
+"""Energy UI extension placeholders."""
+

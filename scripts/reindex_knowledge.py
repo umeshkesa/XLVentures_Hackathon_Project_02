@@ -1,0 +1,2 @@
+"""Knowledge reindexing script placeholder."""
+

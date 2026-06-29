@@ -1,0 +1,2 @@
+"""Rule model placeholders."""
+

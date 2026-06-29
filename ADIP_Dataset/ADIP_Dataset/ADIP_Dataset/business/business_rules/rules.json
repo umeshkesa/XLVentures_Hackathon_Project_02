@@ -1,0 +1,37 @@
+[
+  {
+    "rule_id": "RULE001",
+    "category": "Safety",
+    "condition": "temperature > 90",
+    "action": "Immediate shutdown required",
+    "severity": "Critical"
+  },
+  {
+    "rule_id": "RULE002",
+    "category": "Operations",
+    "condition": "vibration > 5",
+    "action": "Schedule emergency inspection",
+    "severity": "High"
+  },
+  {
+    "rule_id": "RULE003",
+    "category": "Maintenance",
+    "condition": "health_score < 60",
+    "action": "Create preventive maintenance work order",
+    "severity": "Medium"
+  },
+  {
+    "rule_id": "RULE004",
+    "category": "SLA",
+    "condition": "response_time > sla_limit",
+    "action": "Escalate to customer success team",
+    "severity": "High"
+  },
+  {
+    "rule_id": "RULE005",
+    "category": "Inventory",
+    "condition": "quantity_in_stock < reorder_level",
+    "action": "Initiate spare part procurement",
+    "severity": "Medium"
+  }
+]

@@ -1,0 +1,14 @@
+Date: 2026-06-14
+Platform: Customer Portal
+
+Customer (Vikram Patel):
+The emergency response team has not arrived yet.
+
+Support Agent:
+We apologize for the delay. Your request has been escalated.
+
+Customer:
+This is impacting our operations.
+
+Support Agent:
+An emergency technician is being dispatched immediately.

@@ -1,0 +1,9 @@
+Equipment Startup Procedure
+
+1. Verify power availability.
+2. Inspect equipment visually.
+3. Check sensor connectivity.
+4. Verify cooling system status.
+5. Start equipment.
+6. Monitor parameters for 15 minutes.
+7. Confirm normal operating conditions.

@@ -1,0 +1,2 @@
+"""Knowledge Manager boundary."""
+

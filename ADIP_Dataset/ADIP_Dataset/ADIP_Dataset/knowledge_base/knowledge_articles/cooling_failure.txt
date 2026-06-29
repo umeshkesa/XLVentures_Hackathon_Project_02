@@ -1,0 +1,15 @@
+Cooling System Failure
+
+Common Causes:
+- Cooling fan malfunction
+- Blocked air filters
+- Sensor failure
+
+Symptoms:
+- Rapid temperature increase
+- Critical alarms
+
+Recommended Actions:
+1. Inspect cooling fans.
+2. Clean filters.
+3. Replace faulty cooling components.

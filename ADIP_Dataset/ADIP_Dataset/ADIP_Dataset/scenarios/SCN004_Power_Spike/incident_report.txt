@@ -1,0 +1,22 @@
+Incident ID: INC006
+
+Asset: AST004 - Solar Inverter INV01
+Customer: CUS002 - Green Solar Ltd
+
+Incident Summary:
+A sudden power spike caused the solar inverter to shut down unexpectedly.
+
+Root Cause:
+Grid voltage fluctuation and surge protection failure.
+
+Severity:
+High
+
+Downtime:
+3 hours
+
+Energy Loss:
+500 kWh
+
+Resolution:
+Surge protection device replaced and inverter restarted successfully.

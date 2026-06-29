@@ -1,0 +1,22 @@
+Incident ID: INC002
+
+Asset: AST003 - Wind Turbine WT01
+Customer: CUS003 - Metro Power Systems
+
+Incident Summary:
+Wind Turbine WT01 reported excessive vibration levels exceeding operational thresholds.
+
+Root Cause:
+Blade imbalance and bearing wear.
+
+Severity:
+High
+
+Downtime:
+4 hours
+
+Energy Loss:
+850 kWh
+
+Resolution:
+Blade alignment corrected and bearings replaced.

@@ -1,0 +1,7 @@
+{
+  "incident_id": "INC002",
+  "asset_id": "AST003",
+  "recommendation": "Perform vibration analysis, inspect turbine blades, and replace worn bearings.",
+  "confidence_score": 0.89,
+  "reason": "Historical incidents and SCADA logs indicate blade imbalance and bearing degradation."
+}

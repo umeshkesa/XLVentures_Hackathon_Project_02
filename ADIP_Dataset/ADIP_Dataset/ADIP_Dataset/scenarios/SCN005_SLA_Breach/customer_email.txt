@@ -1,0 +1,7 @@
+{
+  "incident_id": "INC006",
+  "asset_id": "AST004",
+  "recommendation": "Inspect surge protection system, verify grid voltage stability, and replace damaged protection devices.",
+  "confidence_score": 0.87,
+  "reason": "SCADA logs and historical incidents indicate voltage surge as the primary cause."
+}

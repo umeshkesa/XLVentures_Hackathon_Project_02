@@ -1,0 +1,2 @@
+"""Rule Manager boundary."""
+

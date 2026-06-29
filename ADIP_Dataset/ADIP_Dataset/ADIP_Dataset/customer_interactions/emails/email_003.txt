@@ -1,0 +1,11 @@
+Subject: Repeated SCADA Connectivity Issues
+
+Hello Support,
+
+Our Bangalore Wind Farm has experienced multiple SCADA communication failures over the past week.
+
+Kindly investigate the issue and provide a detailed report.
+
+Regards,
+Suresh Rao
+Metro Power Systems

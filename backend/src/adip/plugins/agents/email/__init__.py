@@ -1,0 +1,2 @@
+"""Email agent plugin placeholder."""
+

@@ -1,0 +1,8 @@
+Emergency Shutdown Procedure
+
+1. Trigger emergency stop.
+2. Disconnect electrical supply.
+3. Notify emergency response team.
+4. Evacuate personnel if required.
+5. Create incident report.
+6. Inspect equipment before restart.

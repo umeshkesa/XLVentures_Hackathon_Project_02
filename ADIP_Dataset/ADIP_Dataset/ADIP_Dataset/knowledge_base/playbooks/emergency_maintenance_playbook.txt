@@ -1,0 +1,12 @@
+Emergency Maintenance Playbook
+
+Trigger:
+Critical equipment failure.
+
+Steps:
+1. Create emergency work order.
+2. Assign nearest qualified technician.
+3. Verify spare part availability.
+4. Perform repair.
+5. Test equipment after repair.
+6. Close work order and record findings.

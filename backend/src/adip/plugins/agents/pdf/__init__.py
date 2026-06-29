@@ -1,0 +1,2 @@
+"""PDF agent plugin placeholder."""
+

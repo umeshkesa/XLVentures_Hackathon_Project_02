@@ -1,0 +1,22 @@
+Incident ID: INC001
+
+Asset: AST001 - Transformer T102
+Customer: CUS001 - ABC Manufacturing
+
+Incident Summary:
+Transformer T102 reported abnormal temperature spikes exceeding 95°C.
+
+Root Cause:
+Cooling fan malfunction resulting in inadequate heat dissipation.
+
+Severity:
+Critical
+
+Downtime:
+6 hours
+
+Energy Loss:
+1200 kWh
+
+Resolution:
+Cooling fan replaced and transformer restarted successfully.

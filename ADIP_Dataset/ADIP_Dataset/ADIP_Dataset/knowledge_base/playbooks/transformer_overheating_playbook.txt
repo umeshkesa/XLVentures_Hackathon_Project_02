@@ -1,0 +1,13 @@
+Transformer Overheating Response Playbook
+
+Trigger:
+Temperature > 90°C
+
+Steps:
+1. Verify temperature sensor readings.
+2. Check SCADA alarms.
+3. Inspect cooling system.
+4. Reduce transformer load.
+5. Initiate emergency shutdown if temperature exceeds critical threshold.
+6. Create emergency work order.
+7. Dispatch field technician.

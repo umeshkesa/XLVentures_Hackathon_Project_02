@@ -1,0 +1,22 @@
+Incident ID: INC003
+
+Asset: AST005 - Battery System BAT01
+Customer: CUS004 - SunGrid Energy
+
+Incident Summary:
+Battery cooling system failed, causing temperature increase beyond safe operating limits.
+
+Root Cause:
+Cooling module malfunction.
+
+Severity:
+High
+
+Downtime:
+2 hours
+
+Energy Loss:
+300 kWh
+
+Resolution:
+Cooling module replaced and battery temperature normalized.

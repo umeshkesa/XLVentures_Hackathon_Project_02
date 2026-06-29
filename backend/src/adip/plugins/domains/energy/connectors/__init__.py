@@ -1,0 +1,2 @@
+"""Energy connector placeholders."""
+

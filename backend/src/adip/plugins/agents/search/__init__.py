@@ -1,0 +1,2 @@
+"""Search agent plugin placeholder."""
+

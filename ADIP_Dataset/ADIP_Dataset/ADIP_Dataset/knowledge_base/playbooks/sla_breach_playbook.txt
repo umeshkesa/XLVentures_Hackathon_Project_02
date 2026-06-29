@@ -1,0 +1,12 @@
+SLA Breach Response Playbook
+
+Trigger:
+Response time exceeds SLA limits.
+
+Steps:
+1. Verify SLA details.
+2. Escalate issue to customer success team.
+3. Notify management.
+4. Prioritize pending work orders.
+5. Communicate status to customer.
+6. Record breach for future review.

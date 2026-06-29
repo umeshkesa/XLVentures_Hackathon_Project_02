@@ -1,0 +1,2 @@
+"""MQTT tool connector placeholder."""
+

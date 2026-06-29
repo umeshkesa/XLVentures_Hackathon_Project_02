@@ -1,0 +1,16 @@
+Meeting Title: Wind Turbine Vibration Analysis
+
+Date: 2026-06-10
+
+Participants:
+- Suresh Rao (Metro Power Systems)
+- Arjun Singh (Wind Specialist)
+- Engineering Team
+
+Discussion:
+Customer reported increased vibration levels in Wind Turbine WT01. Preliminary analysis suggests possible blade imbalance.
+
+Action Items:
+1. Perform vibration spectrum analysis.
+2. Inspect turbine blades.
+3. Review SCADA logs for related anomalies.

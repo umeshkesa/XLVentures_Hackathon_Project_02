@@ -1,0 +1,11 @@
+High Vibration Response Playbook
+
+Trigger:
+Vibration level exceeds threshold.
+
+Steps:
+1. Analyze vibration history.
+2. Inspect bearings and rotating components.
+3. Perform blade alignment check.
+4. Schedule maintenance if required.
+5. Update maintenance records.

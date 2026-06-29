@@ -1,0 +1,28 @@
+Incident ID: INC009
+
+Customer: CUS005 - Future Energy Corp
+Asset: AST007 - Transformer T201
+
+Incident Summary:
+Emergency maintenance response exceeded the agreed SLA response window.
+
+Root Cause:
+Technician unavailability and delayed escalation.
+
+Severity:
+Critical
+
+SLA Type:
+Premium
+
+Expected Response Time:
+1 Hour
+
+Actual Response Time:
+4 Hours
+
+Business Impact:
+Production downtime and customer dissatisfaction.
+
+Resolution:
+Issue escalated to customer success team and emergency technician dispatched.

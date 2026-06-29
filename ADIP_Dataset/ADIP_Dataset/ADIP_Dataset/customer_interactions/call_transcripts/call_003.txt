@@ -1,0 +1,20 @@
+Call ID: CALL003
+Date: 2026-06-14
+Duration: 15 minutes
+
+Customer: Vikram Patel (Future Energy Corp)
+Support Agent: Priya Menon
+
+Transcript:
+
+Customer: The emergency repair team did not arrive within the SLA window.
+
+Agent: I apologize for the delay. We are investigating the cause.
+
+Customer: This has caused significant operational downtime.
+
+Agent: The issue will be escalated to the customer success team for immediate action.
+
+Customer: Please ensure this does not happen again.
+
+Agent: We will review the incident and update our response procedures.

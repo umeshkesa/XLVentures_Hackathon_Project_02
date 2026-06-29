@@ -1,0 +1,8 @@
+Maintenance Procedure
+
+1. Review maintenance history.
+2. Verify spare part availability.
+3. Perform inspection.
+4. Replace defective components.
+5. Update work order status.
+6. Record findings.

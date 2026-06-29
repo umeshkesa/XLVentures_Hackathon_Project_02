@@ -1,0 +1,2 @@
+"""SQL tool connector placeholder."""
+

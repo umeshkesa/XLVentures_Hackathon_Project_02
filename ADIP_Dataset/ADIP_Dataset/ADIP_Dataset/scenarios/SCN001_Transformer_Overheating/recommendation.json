@@ -1,0 +1,7 @@
+{
+  "incident_id": "INC001",
+  "asset_id": "AST001",
+  "recommendation": "Inspect and replace cooling fan immediately. Perform emergency maintenance and monitor temperature continuously.",
+  "confidence_score": 0.92,
+  "reason": "Historical incidents indicate cooling fan degradation as the primary cause of transformer overheating."
+}

@@ -1,0 +1,8 @@
+Equipment Shutdown Procedure
+
+1. Notify operations team.
+2. Reduce equipment load gradually.
+3. Initiate controlled shutdown.
+4. Disconnect power supply.
+5. Record shutdown reason.
+6. Update maintenance logs.

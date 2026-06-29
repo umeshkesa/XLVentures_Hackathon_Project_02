@@ -1,0 +1,11 @@
+Subject: Abnormal Vibration in Wind Turbine WT01
+
+Dear Support Team,
+
+We have observed unusually high vibration levels in Wind Turbine WT01 at our Bangalore Wind Farm. The turbine has also generated multiple high-vibration alarms over the last 24 hours.
+
+Please investigate the issue at the earliest.
+
+Regards,
+Suresh Rao
+Metro Power Systems

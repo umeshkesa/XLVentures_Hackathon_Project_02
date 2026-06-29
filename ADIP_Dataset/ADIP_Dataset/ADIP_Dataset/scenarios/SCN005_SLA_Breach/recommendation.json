@@ -1,0 +1,7 @@
+{
+  "incident_id": "INC009",
+  "customer_id": "CUS005",
+  "recommendation": "Escalate the incident to the customer success team, prioritize technician allocation, and review SLA compliance procedures.",
+  "confidence_score": 0.94,
+  "reason": "Premium SLA customer experienced response time violation exceeding contractual limits."
+}

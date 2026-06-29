@@ -1,0 +1,11 @@
+Subject: Cooling System Failure Detected
+
+Dear Support Team,
+
+Our Battery System BAT01 at Pune Energy Storage Center has been experiencing abnormal temperature increases. Preliminary inspection indicates that the cooling system may have failed.
+
+Please arrange immediate technical assistance.
+
+Regards,
+Anita Verma
+SunGrid Energy

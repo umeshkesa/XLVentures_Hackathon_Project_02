@@ -1,0 +1,20 @@
+Call ID: CALL002
+Date: 2026-06-10
+Duration: 9 minutes
+
+Customer: Suresh Rao (Metro Power Systems)
+Support Agent: Amit Verma
+
+Transcript:
+
+Customer: We are experiencing repeated SCADA communication failures.
+
+Agent: Are all turbines affected?
+
+Customer: Only Wind Turbine WT01 is affected.
+
+Agent: We will review SCADA logs and assign a field engineer for inspection.
+
+Customer: Please provide an update by tomorrow.
+
+Agent: Certainly. The request has been escalated.

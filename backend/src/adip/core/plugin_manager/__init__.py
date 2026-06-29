@@ -1,0 +1,2 @@
+"""Core plugin lifecycle boundary."""
+

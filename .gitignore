@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Environments and local configuration
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# IDE and operating system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime data
+logs/
+chroma_data/
+postgres_data/
+redis_data/
+
+AGENTS.md
+
+
+# Documentation
+docs/
+documentation/
+
+# AI planning
+prompts/
+plans/
+architecture_docs/
+
+# OpenCode / Codegen
+.opencode/
+.codegen/
+.cursor/
+.claude/
+.github/copilot/
+
+# AI conversations
+chat_exports/
+notes/
+
+# Local environment
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+*.zip
+*.mp4
+*.csv
+*.pdf
+data/
+datasets/

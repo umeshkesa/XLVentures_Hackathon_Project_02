@@ -1,0 +1,15 @@
+Battery Degradation
+
+Common Causes:
+- High operating temperature
+- Overcharging
+- Aging
+
+Symptoms:
+- Reduced capacity
+- Increased internal resistance
+
+Recommended Actions:
+1. Monitor battery temperature.
+2. Perform health assessment.
+3. Replace degraded battery modules.

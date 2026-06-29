@@ -1,0 +1,2 @@
+"""Email tool connector placeholder."""
+

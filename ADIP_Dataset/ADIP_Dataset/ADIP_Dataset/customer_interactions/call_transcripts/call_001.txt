@@ -1,0 +1,20 @@
+Call ID: CALL001
+Date: 2026-06-01
+Duration: 12 minutes
+
+Customer: Rahul Sharma (ABC Manufacturing)
+Support Agent: Neha Singh
+
+Transcript:
+
+Customer: Our Transformer T102 is running at unusually high temperatures.
+
+Agent: What is the current temperature reading?
+
+Customer: It has reached 95°C.
+
+Agent: This exceeds the recommended threshold. We are creating an emergency work order and dispatching a technician.
+
+Customer: Please prioritize this issue as it is affecting production.
+
+Agent: The issue has been marked as Critical and assigned to the emergency response team.

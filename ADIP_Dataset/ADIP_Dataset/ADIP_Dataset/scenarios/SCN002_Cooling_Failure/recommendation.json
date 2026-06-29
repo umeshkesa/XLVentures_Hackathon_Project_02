@@ -1,0 +1,7 @@
+{
+  "incident_id": "INC003",
+  "asset_id": "AST005",
+  "recommendation": "Replace faulty cooling module immediately and perform a complete battery health assessment.",
+  "confidence_score": 0.88,
+  "reason": "Historical maintenance records indicate cooling module degradation."
+}

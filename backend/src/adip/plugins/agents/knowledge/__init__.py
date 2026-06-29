@@ -1,0 +1,2 @@
+"""Knowledge agent plugin placeholder."""
+

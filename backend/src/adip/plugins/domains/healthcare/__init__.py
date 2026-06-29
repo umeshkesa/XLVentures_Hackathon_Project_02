@@ -1,0 +1,2 @@
+"""Healthcare domain plugin placeholder."""
+

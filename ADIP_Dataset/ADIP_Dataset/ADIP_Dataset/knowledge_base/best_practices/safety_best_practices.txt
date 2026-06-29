@@ -1,0 +1,7 @@
+Safety Best Practices
+
+1. Always wear PPE.
+2. Follow lockout/tagout procedures.
+3. Verify equipment isolation before maintenance.
+4. Report unsafe conditions immediately.
+5. Conduct regular safety audits.

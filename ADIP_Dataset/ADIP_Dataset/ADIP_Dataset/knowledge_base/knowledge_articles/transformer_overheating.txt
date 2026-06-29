@@ -1,0 +1,18 @@
+Transformer Overheating
+
+Common Causes:
+- Cooling fan failure
+- Excessive load
+- Oil leakage
+- Poor ventilation
+
+Symptoms:
+- High temperature alarms
+- Reduced efficiency
+- Frequent shutdowns
+
+Recommended Actions:
+1. Inspect cooling system.
+2. Check oil levels.
+3. Reduce load if temperature exceeds 90°C.
+4. Schedule emergency maintenance.

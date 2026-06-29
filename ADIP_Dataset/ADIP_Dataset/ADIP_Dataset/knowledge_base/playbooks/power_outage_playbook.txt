@@ -1,0 +1,12 @@
+Power Outage Response Playbook
+
+Trigger:
+Unexpected power loss detected.
+
+Steps:
+1. Verify outage through SCADA.
+2. Identify affected assets.
+3. Notify operations team.
+4. Dispatch technician.
+5. Restore power supply.
+6. Document incident and downtime.

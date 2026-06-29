@@ -1,0 +1,2 @@
+"""History agent plugin placeholder."""
+
