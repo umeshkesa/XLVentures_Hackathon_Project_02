@@ -2,18 +2,32 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import * as Avatar from '@radix-ui/react-avatar'
 import { LogOut, User, Settings } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/store/auth'
 
 export function UserMenu() {
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
+
+  const initials = user?.name
+    ? user.name.split(' ').map((s: string) => s[0]).join('').toUpperCase().slice(0, 2)
+    : 'AD'
+
+  const displayName = user?.name ?? 'User'
+  const isCustomer = user?.role === 'customer'
+
+  const handleSignOut = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <button className="flex items-center gap-2 rounded-md p-1.5 text-sm transition-colors hover:bg-accent outline-none">
           <Avatar.Root className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-            <Avatar.Fallback>AD</Avatar.Fallback>
+            <Avatar.Fallback>{initials}</Avatar.Fallback>
           </Avatar.Root>
-          <span className="hidden md:inline font-medium">Admin</span>
+          <span className="hidden md:inline font-medium">{displayName}</span>
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
@@ -23,21 +37,26 @@ export function UserMenu() {
           align="end"
         >
           <DropdownMenu.Item
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate(isCustomer ? '/customer/profile' : '/settings')}
             className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm outline-none transition-colors hover:bg-accent"
           >
             <User className="h-4 w-4" />
             Profile
           </DropdownMenu.Item>
-          <DropdownMenu.Item
-            onClick={() => navigate('/settings')}
-            className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm outline-none transition-colors hover:bg-accent"
-          >
-            <Settings className="h-4 w-4" />
-            Settings
-          </DropdownMenu.Item>
+          {!isCustomer && (
+            <DropdownMenu.Item
+              onClick={() => navigate('/settings')}
+              className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm outline-none transition-colors hover:bg-accent"
+            >
+              <Settings className="h-4 w-4" />
+              Settings
+            </DropdownMenu.Item>
+          )}
           <DropdownMenu.Separator className="mx-1 my-1 h-px bg-border" />
-          <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm outline-none transition-colors hover:bg-accent text-destructive">
+          <DropdownMenu.Item
+            onClick={handleSignOut}
+            className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm outline-none transition-colors hover:bg-accent text-destructive"
+          >
             <LogOut className="h-4 w-4" />
             Sign out
           </DropdownMenu.Item>
