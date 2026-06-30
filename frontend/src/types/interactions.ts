@@ -22,6 +22,7 @@ export interface Interaction {
   relatedAssets: string[]
   relatedEvidence: string[]
   relatedRecommendations: string[]
+  relatedPlannerRun?: string | null
   attachments: { name: string; url: string; size: number }[]
   status: InteractionStatus
 }

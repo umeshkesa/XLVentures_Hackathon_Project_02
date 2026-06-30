@@ -3,6 +3,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { useInteractionById } from '@/services/interactionApiService'
+import { ClipboardList } from 'lucide-react'
 
 const TYPE_LABELS: Record<string, string> = { email: 'Email', meeting: 'Meeting', crm_update: 'CRM Update', call_transcript: 'Call Transcript', chat: 'Chat', complaint: 'Complaint', feedback: 'Feedback', service_request: 'Service Request' }
 const TYPE_COLORS: Record<string, string> = { email: '#3b82f6', meeting: '#8b5cf6', crm_update: '#06b6d4', call_transcript: '#10b981', chat: '#f59e0b', complaint: '#ef4444', feedback: '#22c55e', service_request: '#f97316' }
@@ -55,7 +56,7 @@ export default function InteractionDetail() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {interaction.relatedAssets.length > 0 && (
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
             <h2 className="text-lg font-semibold mb-4">Related Assets ({interaction.relatedAssets.length})</h2>
@@ -87,12 +88,21 @@ export default function InteractionDetail() {
             <h2 className="text-lg font-semibold mb-4">Related Recommendations ({interaction.relatedRecommendations.length})</h2>
             <div className="space-y-2">
               {interaction.relatedRecommendations.map((r) => (
-                <div key={r} className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                <Link key={r} to={`/recommendations`} className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   {r}
-                </div>
+                </Link>
               ))}
             </div>
+          </div>
+        )}
+        {interaction.relatedPlannerRun && (
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+            <h2 className="text-lg font-semibold mb-4">Planner Run</h2>
+            <Link to={`/planner?id=${interaction.relatedPlannerRun}`} className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+              <ClipboardList className="h-4 w-4" />
+              {interaction.relatedPlannerRun}
+            </Link>
           </div>
         )}
       </div>

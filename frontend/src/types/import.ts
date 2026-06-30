@@ -31,6 +31,7 @@ export interface ClassificationResult {
   sourceName: string
   detectedBy: string
   details?: Record<string, unknown>
+  classificationReason?: string
 }
 
 export interface FileDetail {
@@ -57,6 +58,15 @@ export interface ImportResult {
     filesProcessed?: number
     fileDetails?: FileDetail[]
     rowsImported?: number
+    pipelineStages?: PipelineStage[]
+    recommendation?: string
+    confidence?: number
+    reasoning?: string
+    evidenceIds?: string[]
+    knowledgeIds?: string[]
+    ruleIds?: string[]
+    issue?: string
+    severity?: string
   }
 }
 
@@ -72,6 +82,7 @@ export interface ImportReport {
   classification?: ClassificationResult | ClassificationResult[]
   importSummary?: Record<string, unknown>
   recommendations?: Record<string, unknown>
+  pipelineStages?: PipelineStage[]
   error?: string
 }
 
@@ -86,4 +97,56 @@ export interface UploadStage {
   label: string
   status: 'pending' | 'active' | 'completed' | 'failed'
   detail?: string
+}
+
+export interface RecommendationDetail {
+  conclusion: string
+  confidence: number
+  readiness: string
+  primaryRecommendation: string
+  reasoningSummary: string
+  status: string
+  issue?: string
+  severity?: string
+  recommendation?: string
+  confidenceScore?: number
+  reasoning?: string
+  evidence?: string[]
+  knowledge?: string[]
+  rules?: string[]
+  businessImpact?: string
+  estimatedCost?: number
+  estimatedSavings?: number
+  timeline?: string
+  explainability?: {
+    evidenceUsed: string[]
+    knowledgeRetrieved: string[]
+    businessRulesTriggered: string[]
+    reasoningSummary: string
+    confidenceScore: number
+    alternativeActions: { title: string; confidence: number; reason: string }[]
+  }
+}
+
+export interface PipelinePhase {
+  name: string
+  label: string
+  status: 'pending' | 'running' | 'completed' | 'skipped' | 'failed'
+  detail?: string
+  startedAt?: string
+  completedAt?: string
+  durationMs?: number
+  error?: string
+  description?: string
+}
+
+export interface PipelineStage {
+  name: string
+  label: string
+  status: 'pending' | 'in_progress' | 'completed' | 'failed'
+  startedAt: string | null
+  completedAt: string | null
+  durationMs: number
+  error: string | null
+  description?: string
 }

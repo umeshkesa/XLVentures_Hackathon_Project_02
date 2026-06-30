@@ -10,7 +10,7 @@ export interface KPI {
 
 export interface ActivityItem {
   id: string
-  type: 'import' | 'evidence' | 'recommendation' | 'review' | 'action'
+  type: 'import' | 'evidence' | 'recommendation' | 'review' | 'action' | 'planner'
   title: string
   description: string
   timestamp: string
@@ -77,7 +77,33 @@ export interface AlertItem {
   title: string
   description: string
   timestamp: string
-  source: 'recommendation' | 'import' | 'asset' | 'compliance'
+  source: 'recommendation' | 'import' | 'asset' | 'compliance' | 'planner'
+}
+
+export interface PlannerRun {
+  id: string
+  title: string
+  goal: string
+  status: 'active' | 'completed' | 'failed'
+  confidence: number
+  agentCount: number
+  totalDurationMs: number
+  createdAt: string
+}
+
+export interface AgentStat {
+  name: string
+  status: 'idle' | 'active' | 'busy' | 'error'
+  successRate: number
+  avgDurationMs: number
+  executionsToday: number
+}
+
+export interface KnowledgeUsage {
+  documentId: string
+  title: string
+  usageCount: number
+  confidence: number
 }
 
 export interface DashboardData {
@@ -89,6 +115,12 @@ export interface DashboardData {
   assetOverview: AssetOverview
   customerSummary: CustomerSummary
   alerts: AlertItem[]
+  plannerRuns: PlannerRun[]
+  agentStats: AgentStat[]
+  knowledgeUsage: KnowledgeUsage[]
+  criticalRecommendations: number
+  pendingReviews: number
+  plannerSuccessRate: number
   loading: boolean
   error: string | null
 }

@@ -69,7 +69,7 @@ class LLMConfig(BaseModel):
     api_key: SecretStr = Field(
         default=SecretStr("sk-placeholder"), description="LLM provider API key"
     )
-    model: str = Field(default="gpt-4", description="Model identifier string")
+    model: str = Field(default="gemini-2.5-flash", description="Model identifier string")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Sampling temperature")
     max_tokens: int = Field(default=4096, ge=1, description="Maximum tokens per generation")
     timeout: int = Field(default=60, ge=1, description="Request timeout in seconds")

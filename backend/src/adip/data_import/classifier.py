@@ -94,6 +94,7 @@ class ContentClassResult:
         source_name: str = "",
         detected_by: str = "",
         details: dict[str, Any] | None = None,
+        classification_reason: str = "",
     ) -> None:
         self.category = category
         self.confidence = confidence
@@ -102,6 +103,7 @@ class ContentClassResult:
         self.source_name = source_name or Path(file_path).name
         self.detected_by = detected_by
         self.details = details or {}
+        self.classification_reason = classification_reason
 
     def __repr__(self) -> str:
         return (
@@ -120,6 +122,7 @@ class ContentClassResult:
             "source_name": self.source_name,
             "detected_by": self.detected_by,
             "details": self.details,
+            "classification_reason": self.classification_reason,
         }
 
 
@@ -197,6 +200,32 @@ class ClassificationRegistry:
         (".txt", ContentCategory.BUSINESS_DOCUMENT, [TargetModule.KNOWLEDGE], 0.30),
         (".json", ContentCategory.BUSINESS_RULE, [TargetModule.RULES], 0.35),
         (".csv", ContentCategory.UNKNOWN, [TargetModule.EVIDENCE], 0.20),
+    ]
+
+    # --- Content pattern signatures for text/email/chat files ---
+    CONTENT_SIGNATURES: list[tuple[list[str], ContentCategory, list[TargetModule], float, str]] = [
+        (["Customer:", "customer"], ContentCategory.CUSTOMER_PROFILE, [TargetModule.REFERENCE], 0.85, "Detected customer identifier in content"),
+        (["Transformer", "Temperature", "°C"], ContentCategory.INCIDENT, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.90, "Detected transformer temperature reading indicating incident"),
+        (["From:", "Subject:", "To:", "Email"], ContentCategory.SCENARIO_EMAIL, [TargetModule.EVIDENCE], 0.85, "Detected email headers indicating customer communication"),
+        (["Chat:", "chat message", "user said"], ContentCategory.SERVICE_REQUEST, [TargetModule.EVIDENCE], 0.75, "Detected chat transcript content"),
+        (["Call Transcript", "call transcript", "call recording"], ContentCategory.CALL_TRANSCRIPT, [TargetModule.KNOWLEDGE], 0.80, "Detected call transcript"),
+        (["CRM Update", "CRM Note", "customer contact"], ContentCategory.CRM_UPDATE, [TargetModule.EVIDENCE], 0.80, "Detected CRM update entry"),
+        (["SOP:", "Standard Operating Procedure", "procedure:"], ContentCategory.SOP, [TargetModule.KNOWLEDGE], 0.88, "Detected Standard Operating Procedure document"),
+        (["Policy:", "Policy Name"], ContentCategory.KNOWLEDGE_ARTICLE, [TargetModule.KNOWLEDGE], 0.80, "Detected policy document"),
+        (["Playbook:", "Playbook Name"], ContentCategory.PLAYBOOK, [TargetModule.KNOWLEDGE], 0.85, "Detected playbook document"),
+        (["Complaint", "complaint_id"], ContentCategory.COMPLAINT, [TargetModule.EVIDENCE], 0.80, "Detected complaint record"),
+        (["Maintenance Log", "maintenance_type", "maintenance_id"], ContentCategory.MAINTENANCE, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.85, "Detected maintenance log"),
+        (["Inspection Report", "inspection_id"], ContentCategory.INCIDENT, [TargetModule.EVIDENCE], 0.80, "Detected inspection report"),
+        (["Voltage", "fluctuation", "power"], ContentCategory.INCIDENT, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.75, "Detected voltage/power incident description"),
+        (["Battery", "degradation", "capacity"], ContentCategory.INCIDENT, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.75, "Detected battery degradation report"),
+        (["Wind turbine", "vibration", "bearing"], ContentCategory.INCIDENT, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.80, "Detected wind turbine vibration incident"),
+        (["Solar inverter", "fault", "error"], ContentCategory.INCIDENT, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.80, "Detected solar inverter fault"),
+        (["SCADA", "alarm", "alert"], ContentCategory.ALARM, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.85, "Detected SCADA alarm record"),
+        (["Best Practice", "best practice"], ContentCategory.BEST_PRACTICE, [TargetModule.KNOWLEDGE], 0.80, "Detected best practice document"),
+        (["Equipment Manual", "User Manual", "Operating Manual"], ContentCategory.EQUIPMENT_MANUAL, [TargetModule.KNOWLEDGE], 0.85, "Detected equipment manual"),
+        (["Predictive maintenance", "maintenance alert"], ContentCategory.MAINTENANCE, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.80, "Detected predictive maintenance alert"),
+        (["Emergency", "outage", "power failure"], ContentCategory.INCIDENT, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.85, "Detected emergency/outage incident"),
+        (["Energy spike", "power spike"], ContentCategory.INCIDENT, [TargetModule.EVIDENCE, TargetModule.ENERGY], 0.78, "Detected energy spike incident"),
     ]
 
 
@@ -378,7 +407,7 @@ class ContentClassifier:
     # ── Internal classification methods ───────────────────────────────────
 
     def _classify_csv(self, path: Path, fname: str) -> ContentClassResult:
-        """Classify a CSV file — first try path, then headers."""
+        """Classify a CSV file — first try path, then headers, then LLM."""
         path_result = self._classify_by_path(path)
         if path_result.category != ContentCategory.UNKNOWN and path_result.confidence >= 0.75:
             return path_result
@@ -393,6 +422,11 @@ class ContentClassifier:
                     return header_result
         except Exception:
             log.debug("classifier.csv_sample_failed", path=str(path))
+
+        llm_result = self._classify_with_llm(path.read_text(encoding="utf-8", errors="ignore")[:2000], fname, ".csv")
+        if llm_result is not None and llm_result.confidence >= 0.50:
+            llm_result.file_path = str(path)
+            return llm_result
 
         return path_result
 
@@ -431,8 +465,44 @@ class ContentClassifier:
             detected_by="extension_json",
         )
 
+    def _classify_with_llm(self, content: str, fname: str, ext: str) -> ContentClassResult | None:
+        """Classify content using Gemini LLM."""
+        try:
+            from adip.services.llm import chat as llm_chat
+
+            categories_list = "\n".join(f"- {c.value}" for c in ContentCategory)
+            modules_list = "\n".join(f"- {m.value}" for m in TargetModule)
+            preview = content[:2000]
+
+            prompt = (
+                f"Classify the following file content into exactly one of these categories:\n"
+                f"{categories_list}\n\n"
+                f"Also recommend the best target ADIP module from:\n"
+                f"{modules_list}\n\n"
+                f"File name: {fname}\n"
+                f"File extension: {ext}\n\n"
+                f"Content preview:\n{preview}\n\n"
+                f"Respond in JSON only with keys: category, confidence (0.0-1.0), target_modules (array), "
+                f"classification_reason (brief explanation)"
+            )
+            response = llm_chat(prompt, model="gemini-1.5-flash", max_tokens=512)
+            import json
+            data = json.loads(response.strip().removeprefix("```json").removesuffix("```").strip())
+            cat = ContentCategory(data.get("category", "UNKNOWN"))
+            modules = [TargetModule(m) for m in data.get("target_modules", ["EVIDENCE"])]
+            return ContentClassResult(
+                category=cat,
+                confidence=min(1.0, max(0.0, float(data.get("confidence", 0.5)))),
+                target_modules=modules,
+                file_path="",
+                detected_by="llm_classifier",
+                classification_reason=data.get("classification_reason", ""),
+            )
+        except Exception:
+            return None
+
     def _classify_text(self, path: Path, fname: str) -> ContentClassResult:
-        """Classify a text file."""
+        """Classify a text file — uses filename first, then content analysis."""
         path_result = self._classify_by_path(path)
 
         if "incident" in fname:
@@ -443,6 +513,7 @@ class ContentClassifier:
                 file_path=str(path),
                 detected_by="filename_match",
                 details={"path_pattern": path_result.category.value if path_result.category != ContentCategory.UNKNOWN else None},
+                classification_reason="Filename indicates incident report",
             )
         if "email" in fname:
             return ContentClassResult(
@@ -452,10 +523,20 @@ class ContentClassifier:
                 file_path=str(path),
                 detected_by="filename_match",
                 details={"path_pattern": path_result.category.value if path_result.category != ContentCategory.UNKNOWN else None},
+                classification_reason="Filename indicates email communication",
             )
 
         if path_result.category != ContentCategory.UNKNOWN:
             return path_result
+
+        content_result = self._classify_by_content(path)
+        if content_result is not None and content_result.confidence >= 0.50:
+            return content_result
+
+        llm_result = self._classify_with_llm(path.read_text(encoding="utf-8", errors="ignore"), fname, ".txt")
+        if llm_result is not None and llm_result.confidence >= 0.50:
+            llm_result.file_path = str(path)
+            return llm_result
 
         return ContentClassResult(
             category=ContentCategory.BUSINESS_DOCUMENT,
@@ -463,7 +544,41 @@ class ContentClassifier:
             target_modules=[TargetModule.KNOWLEDGE],
             file_path=str(path),
             detected_by="extension_txt",
+            classification_reason="Generic text file — no specific content patterns detected",
         )
+
+    def _classify_by_content(self, path: Path) -> ContentClassResult | None:
+        """Classify a file by scanning its content for known patterns."""
+        try:
+            content = path.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            return None
+
+        content_lower = content.lower()
+        best: ContentClassResult | None = None
+
+        for keywords, cat, modules, confidence, reason in self.registry.CONTENT_SIGNATURES:
+            match_count = sum(1 for kw in keywords if kw.lower() in content_lower)
+            if match_count > 0:
+                ratio = match_count / len(keywords)
+                adjusted = confidence * ratio
+                if best is None or adjusted > best.confidence:
+                    matched_keywords = [kw for kw in keywords if kw.lower() in content_lower]
+                    best = ContentClassResult(
+                        category=cat,
+                        confidence=adjusted,
+                        target_modules=modules,
+                        file_path=str(path),
+                        detected_by="content_pattern",
+                        details={
+                            "matched_keywords": matched_keywords,
+                            "match_ratio": round(ratio, 2),
+                            "content_preview": content[:200],
+                        },
+                        classification_reason=reason,
+                    )
+
+        return best
 
     def _classify_by_path(self, path: Path) -> ContentClassResult:
         """Classify using file path directory patterns."""
