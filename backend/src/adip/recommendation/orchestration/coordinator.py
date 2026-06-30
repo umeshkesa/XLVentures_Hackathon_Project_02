@@ -10,6 +10,7 @@ from __future__ import annotations
 import uuid
 
 import structlog
+from sqlalchemy.orm import Session
 
 from adip.recommendation.contracts.models import (
     RecommendationDecision,
@@ -49,6 +50,10 @@ from adip.recommendation.orchestration.review import RecommendationReview
 from adip.recommendation.orchestration.session import RecommendationSessionManager
 from adip.recommendation.orchestration.snapshot import RecommendationSnapshot
 from adip.recommendation.orchestration.version_manager import RecommendationVersionManager
+from adip.infrastructure.repositories.recommendation_repo import (
+    get_all_recommendations as _db_get_all_recommendations,
+    save_recommendation_dict as _db_save_recommendation_dict,
+)
 
 log = structlog.get_logger(__name__)
 
@@ -91,7 +96,9 @@ class RecommendationCoordinator:
         portfolio_quality: PortfolioQuality | None = None,
         trace: RecommendationTrace | None = None,
         metrics_collector: RecommendationMetricsCollector | None = None,
+        db_session: Session | None = None,
     ) -> None:
+        self.db_session: Session | None = db_session
         self.strategy_selector = strategy_selector or StrategySelector()
         self.generator = generator or RecommendationGenerator()
         self.ranker = ranker or RecommendationRanker()
@@ -408,6 +415,26 @@ class RecommendationCoordinator:
             )
 
             result.decision = decision
+
+            # Persist to database
+            if self.db_session is not None and best:
+                _db_save_recommendation_dict(
+                    self.db_session,
+                    entity_id=best.candidate_id,
+                    status=result.status.value if hasattr(result.status, "value") else str(result.status),
+                    priority=best.priority.value if hasattr(best.priority, "value") else str(best.priority),
+                    recommendation_type=request.recommendation_type.value if hasattr(request, 'recommendation_type') and hasattr(request.recommendation_type, 'value') else str(getattr(request, 'recommendation_type', '')),
+                    source=request.source.value if hasattr(request, 'source') and hasattr(request.source, 'value') else str(getattr(request, 'source', '')),
+                    title=(best.action or primary_rec)[:512],
+                    description=best.description or "",
+                    domain=request.domain.value if hasattr(request.domain, "value") else str(request.domain),
+                    confidence=confidence.overall_confidence,
+                    estimated_cost=cost.total_cost if cost else None,
+                    estimated_savings=0.0,
+                    action=primary_rec or "",
+                    reasoning_session_id=str(request.reasoning_result_id) if request.reasoning_result_id else None,
+                    serialized=None,
+                )
             result.candidates = ranked
             result.confidence = confidence
             result.status = RecommendationStatus.COMPLETED
@@ -469,7 +496,20 @@ class RecommendationCoordinator:
         Returns:
             RecommendationResult if found, None otherwise.
         """
+        if self.db_session is not None:
+            rec = _db_get_all_recommendations(self.db_session)
+            for r in rec:
+                if str(r.get("entity_id", "")) == result_id or str(r.get("id", "")) == result_id:
+                    return RecommendationResult(
+                        request_id=result_id,
+                        status=RecommendationStatus(r.get("status", "completed")),
+                    )
         return None
+
+    def _db_recommendation_count(self) -> int:
+        if self.db_session is not None:
+            return len(_db_get_all_recommendations(self.db_session))
+        return 0
 
     def health(self) -> RecommendationHealth:
         """Get the health status of all sub-components.
@@ -477,6 +517,7 @@ class RecommendationCoordinator:
         Returns:
             RecommendationHealth with component statuses.
         """
+        db_count = self._db_recommendation_count()
         return RecommendationHealth(
             overall_status="HEALTHY",
             coordinator_status="HEALTHY",
@@ -497,7 +538,7 @@ class RecommendationCoordinator:
             approval_readiness_status="HEALTHY",
             portfolio_quality_status="HEALTHY",
             hooks_status="HEALTHY",
-            recommendation_count=0,
+            recommendation_count=db_count,
             error_count=0,
             average_latency_ms=0.0,
         )
@@ -508,8 +549,9 @@ class RecommendationCoordinator:
         Returns:
             RecommendationMetrics with current values.
         """
+        db_count = self._db_recommendation_count()
         return RecommendationMetrics(
-            recommendation_total=0,
+            recommendation_total=db_count,
             candidates_total=0,
             decisions_total=0,
             packages_total=0,

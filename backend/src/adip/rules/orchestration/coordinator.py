@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import structlog
+from sqlalchemy.orm import Session
 
 from adip.rules.contracts.models import (
     Rule,
@@ -42,6 +43,13 @@ from adip.rules.execution.validator import RuleValidator
 from adip.rules.execution.version_manager import RuleVersionManager
 from adip.rules.orchestration.confidence import RuleConfidenceCalculator
 from adip.rules.orchestration.session import RuleSessionManager
+from adip.infrastructure.repositories.rule_repo import (
+    count_rules as _db_count_rules,
+    get_all_rules as _db_get_all_rules,
+    get_rule as _db_get_rule,
+    save_rule as _db_save_rule,
+    delete_rule as _db_delete_rule,
+)
 
 log = structlog.get_logger(__name__)
 
@@ -69,7 +77,9 @@ class RuleCoordinator:
         trace: RuleTrace | None = None,
         metrics_collector: RuleMetricsCollector | None = None,
         confidence_calculator: RuleConfidenceCalculator | None = None,
+        db_session: Session | None = None,
     ) -> None:
+        self.db_session: Session | None = db_session
         self._validator = validator or RuleValidator()
         self._parser = parser or RuleParser()
         self._compiler = compiler or RuleCompiler()
@@ -110,6 +120,8 @@ class RuleCoordinator:
         self._lifecycle_manager.transition(rule, RuleLifecycleStatus.DRAFT)
 
         self._rules[rule_id] = rule
+        if self.db_session is not None:
+            _db_save_rule(self.db_session, rule)
 
         # Record trace
         self._trace.record_stage(
@@ -126,7 +138,12 @@ class RuleCoordinator:
 
     def get_rule(self, rule_id: str) -> Rule | None:
         """Retrieve a rule by ID."""
-        return self._rules.get(rule_id)
+        rule = self._rules.get(rule_id)
+        if rule is None and self.db_session is not None:
+            rule = _db_get_rule(self.db_session, rule_id)
+            if rule is not None:
+                self._rules[rule_id] = rule
+        return rule
 
     def update_rule(self, rule: Rule) -> Rule:
         """Update an existing rule."""
@@ -137,6 +154,8 @@ class RuleCoordinator:
         new_compiled = self._compiler.compile(rule)
         self._cache.set_compiled_rule(f"compiled:{rule_id}", new_compiled)
         self._rules[rule_id] = rule
+        if self.db_session is not None:
+            _db_save_rule(self.db_session, rule)
         return rule
 
     def delete_rule(self, rule_id: str) -> bool:
@@ -146,6 +165,10 @@ class RuleCoordinator:
             del self._rules[rule_id]
             self._cache.invalidate(f"compiled:{rule_id}")
             self._cache.invalidate(f"rule:{rule_id}")
+            if self.db_session is not None:
+                _db_delete_rule(self.db_session, rule_id)
+        elif self.db_session is not None:
+            existed = _db_delete_rule(self.db_session, rule_id)
         return existed
 
     def create_ruleset(self, ruleset: RuleSet) -> RuleSet:
@@ -161,6 +184,8 @@ class RuleCoordinator:
             rule_id = str(rule.rule_id)
             if rule_id not in self._rules:
                 self._rules[rule_id] = rule
+                if self.db_session is not None:
+                    _db_save_rule(self.db_session, rule)
 
         self._rulesets[ruleset_id] = ruleset
         self._metrics_collector.increment_rulesets()
@@ -196,6 +221,8 @@ class RuleCoordinator:
         log.info("coordinator.activate_rule", rule_id=rule_id)
         result = self._lifecycle_manager.transition(rule, RuleLifecycleStatus.ACTIVE)
         self._rules[rule_id] = result
+        if self.db_session is not None:
+            _db_save_rule(self.db_session, result)
         self._metrics_collector.increment_active_rules()
 
         # Record trace
@@ -211,11 +238,15 @@ class RuleCoordinator:
     def archive_rule(self, rule_id: str) -> bool:
         """Archive a rule."""
         rule = self._rules.get(rule_id)
+        if rule is None and self.db_session is not None:
+            rule = _db_get_rule(self.db_session, rule_id)
         if rule is None:
             return False
         log.info("coordinator.archive_rule", rule_id=rule_id)
         result = self._lifecycle_manager.transition(rule, RuleLifecycleStatus.ARCHIVED)
         self._rules[rule_id] = result
+        if self.db_session is not None:
+            _db_save_rule(self.db_session, result)
         self._metrics_collector.decrement_active_rules()
         return True
 
@@ -248,7 +279,12 @@ class RuleCoordinator:
         )
         val_duration = (datetime.now(UTC) - val_start).total_seconds() * 1000
 
-        # ── Filter rules by domain ────────────────────────────────────────
+        # ── Load rules from DB, then filter by domain ─────────────────────
+        if self.db_session is not None:
+            for rule in _db_get_all_rules(self.db_session):
+                rid = str(rule.rule_id)
+                if rid not in self._rules:
+                    self._rules[rid] = rule
         domain_rules = [
             r for r in self._rules.values()
             if r.domain == domain and r.enabled and r.status == RuleLifecycleStatus.ACTIVE
@@ -398,6 +434,11 @@ class RuleCoordinator:
         log.info("coordinator.health")
         metrics_snap = self._metrics_collector.snapshot()
         total_ops = metrics_snap.evaluations_total + metrics_snap.conflicts_total + 1
+        if self.db_session is not None:
+            for rule in _db_get_all_rules(self.db_session):
+                rid = str(rule.rule_id)
+                if rid not in self._rules:
+                    self._rules[rid] = rule
         return RuleHealth(
             overall_status="HEALTHY",
             coordinator_status="HEALTHY",

@@ -16,6 +16,7 @@ import uuid
 from datetime import UTC, datetime
 
 import structlog
+from sqlalchemy.orm import Session
 
 from adip.evidence.contracts.models import (
     Evidence,
@@ -49,6 +50,12 @@ from adip.evidence.execution.validator import EvidenceValidator
 from adip.evidence.execution.weight_manager import EvidenceWeightManager
 from adip.evidence.orchestration.confidence import EvidenceConfidenceCalculator
 from adip.evidence.orchestration.session import EvidenceSessionManager
+from adip.infrastructure.repositories.evidence_repo import (
+    count_evidence as _db_count_evidence,
+    get_all_evidence as _db_get_all_evidence,
+    get_evidence as _db_get_evidence,
+    save_evidence as _db_save_evidence,
+)
 
 log = structlog.get_logger(__name__)
 
@@ -109,6 +116,7 @@ class EvidenceCoordinator:
         trace: EvidenceTrace | None = None,
         session_manager: EvidenceSessionManager | None = None,
         confidence_calculator: EvidenceConfidenceCalculator | None = None,
+        db_session: Session | None = None,
     ) -> None:
         self.collector = collector or EvidenceCollector()
         self.validator = validator or EvidenceValidator()
@@ -135,10 +143,11 @@ class EvidenceCoordinator:
         self.session_manager = session_manager or EvidenceSessionManager()
         self.confidence_calculator = confidence_calculator or EvidenceConfidenceCalculator()
 
-        # In-memory evidence store
+        # In-memory evidence store + optional DB persistence
         self._evidence_store: dict[str, Evidence] = {}
         self._packages: dict[str, EvidencePackage] = {}
         self._start_time: float = time.time()
+        self.db_session: Session | None = db_session
 
     # ─────────────────────────────────────────────────────────────────
     # Collect & Process
@@ -191,6 +200,8 @@ class EvidenceCoordinator:
 
         # Store evidence
         self._evidence_store[str(evidence.evidence_id)] = evidence
+        if self.db_session is not None:
+            _db_save_evidence(self.db_session, evidence)
         self.session_manager.add_evidence_id(str(session.session_id), str(evidence.evidence_id))
 
         # 2. Validation
@@ -519,6 +530,8 @@ class EvidenceCoordinator:
         # Store evidence
         for ev in evidence_list:
             self._evidence_store[str(ev.evidence_id)] = ev
+            if self.db_session is not None:
+                _db_save_evidence(self.db_session, ev)
             self.session_manager.add_evidence_id(str(session.session_id), str(ev.evidence_id))
 
         # Validate all
@@ -537,6 +550,8 @@ class EvidenceCoordinator:
         normalized = [self.normalizer.normalize(ev) for ev in evidence_list]
         for ev in normalized:
             self._evidence_store[str(ev.evidence_id)] = ev
+            if self.db_session is not None:
+                _db_save_evidence(self.db_session, ev)
         t1 = time.time()
         norm_duration = round((t1 - t0) * 1000, 2)
         reasoning.append(f"Normalized {len(normalized)} items")
@@ -743,6 +758,11 @@ class EvidenceCoordinator:
             return cached
 
         evidence = self._evidence_store.get(evidence_id)
+        if evidence is None and self.db_session is not None:
+            evidence = _db_get_evidence(self.db_session, evidence_id)
+            if evidence is not None:
+                self._evidence_store[evidence_id] = evidence
+
         if evidence:
             self.cache.set_evidence(evidence.evidence_id, evidence)
 
@@ -762,7 +782,7 @@ class EvidenceCoordinator:
 
     def health(self) -> EvidenceHealth:
         """Aggregate health status from all sub-components."""
-        all_evidence = list(self._evidence_store.values())
+        all_evidence = self.get_all_evidence()
         metrics_snapshot = self.metrics_collector.snapshot()
 
         collector_status = "HEALTHY"
@@ -832,7 +852,7 @@ class EvidenceCoordinator:
     def metrics(self) -> EvidenceMetrics:
         """Return aggregated metrics from the metrics collector."""
         snap = self.metrics_collector.snapshot()
-        all_evidence = list(self._evidence_store.values())
+        all_evidence = self.get_all_evidence()
         return EvidenceMetrics(
             evidence_total=len(all_evidence),
             packages_total=snap.bundle_count,
@@ -871,4 +891,12 @@ class EvidenceCoordinator:
 
     def get_all_evidence(self) -> list[Evidence]:
         """Return all stored evidence (for manager use)."""
-        return list(self._evidence_store.values())
+        seen: set[str] = set(self._evidence_store.keys())
+        result = list(self._evidence_store.values())
+        if self.db_session is not None:
+            for ev in _db_get_all_evidence(self.db_session):
+                eid = str(ev.evidence_id)
+                if eid not in seen:
+                    seen.add(eid)
+                    result.append(ev)
+        return result

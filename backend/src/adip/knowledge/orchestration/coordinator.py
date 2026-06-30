@@ -18,6 +18,7 @@ Enhanced in Phase 3.5 with:
 from __future__ import annotations
 
 import structlog
+from sqlalchemy.orm import Session
 
 from adip.knowledge.contracts.models import (
     ExplainabilityMetadata,
@@ -57,6 +58,12 @@ from adip.knowledge.execution.strategies import (
 from adip.knowledge.execution.trace import KnowledgeTrace
 from adip.knowledge.execution.validator import DocumentValidator
 from adip.knowledge.execution.version_manager import KnowledgeVersionManager
+from adip.infrastructure.repositories.knowledge_repo import (
+    delete_document as _db_delete_document,
+    get_all_documents as _db_get_all_documents,
+    get_document as _db_get_document,
+    save_document as _db_save_document,
+)
 
 log = structlog.get_logger(__name__)
 
@@ -93,7 +100,9 @@ class KnowledgeCoordinator:
         trace: KnowledgeTrace | None = None,
         metrics_collector: KnowledgeMetricsCollector | None = None,
         confidence_calculator: KnowledgeConfidenceCalculator | None = None,
+        db_session: Session | None = None,
     ) -> None:
+        self.db_session: Session | None = db_session
         self._validator = validator or DocumentValidator()
         self._cleaner = cleaner or DocumentCleaner()
         self._ocr = ocr or OCRProcessor()
@@ -151,6 +160,8 @@ class KnowledgeCoordinator:
 
         document.status = KnowledgeStatus.PROCESSING
         self._documents[doc_id] = document
+        if self.db_session is not None:
+            _db_save_document(self.db_session, document)
 
         self._trace.record(TraceRecord(stage_name="cleaning", operation="process_document", domain=document.domain.value))
         cleaned = self._cleaner.clean_document(document)
@@ -177,6 +188,8 @@ class KnowledgeCoordinator:
         post_ocr.extra["chunk_count"] = len(chunks)
         post_ocr.extra["embedding_count"] = len(embeddings)
         self._documents[doc_id] = post_ocr
+        if self.db_session is not None:
+            _db_save_document(self.db_session, post_ocr)
 
         self._metrics_collector.increment_documents(
             domain=post_ocr.domain.value, doc_type=post_ocr.document_type.value
@@ -257,13 +270,22 @@ class KnowledgeCoordinator:
 
     def get_document(self, document_id: str) -> KnowledgeDocument | None:
         """Retrieve a document by ID."""
-        return self._documents.get(document_id)
+        doc = self._documents.get(document_id)
+        if doc is None and self.db_session is not None:
+            doc = _db_get_document(self.db_session, document_id)
+            if doc is not None:
+                self._documents[document_id] = doc
+        return doc
 
     def delete_document(self, document_id: str) -> bool:
         """Delete a document and its associated data."""
         if document_id not in self._documents:
+            if self.db_session is not None:
+                return _db_delete_document(self.db_session, document_id)
             return False
         del self._documents[document_id]
+        if self.db_session is not None:
+            _db_delete_document(self.db_session, document_id)
         self._index_manager.delete_index(document_id)
         self._version_manager.clear()
         log.info("coordinator.delete_document", document_id=document_id)
@@ -272,9 +294,14 @@ class KnowledgeCoordinator:
     def archive_document(self, document_id: str) -> bool:
         """Archive a document (mark as archived)."""
         doc = self._documents.get(document_id)
+        if doc is None and self.db_session is not None:
+            doc = _db_get_document(self.db_session, document_id)
         if doc is None:
             return False
         doc.status = KnowledgeStatus.ARCHIVED
+        self._documents[document_id] = doc
+        if self.db_session is not None:
+            _db_save_document(self.db_session, doc)
         log.info("coordinator.archive_document", document_id=document_id)
         return True
 
@@ -317,6 +344,13 @@ class KnowledgeCoordinator:
     def _collect_chunks(self) -> list[KnowledgeChunk]:
         """Collect all chunks from all indexed documents."""
         chunks: list[KnowledgeChunk] = []
+        seen: set[str] = set(self._documents.keys())
+        if self.db_session is not None:
+            for doc in _db_get_all_documents(self.db_session):
+                did = str(doc.document_id)
+                if did not in seen:
+                    seen.add(did)
+                    self._documents[did] = doc
         for doc_id, doc in self._documents.items():
             if doc.status == KnowledgeStatus.INDEXED:
                 chunk = KnowledgeChunk(

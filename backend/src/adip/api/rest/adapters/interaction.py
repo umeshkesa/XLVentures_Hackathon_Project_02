@@ -7,6 +7,11 @@ from typing import Any
 
 from adip.api.rest.adapters.base import BaseServiceAdapter
 from adip.api.rest.models.base import ApiResponse
+from adip.infrastructure.database import get_sync_session
+from adip.infrastructure.repositories.interaction_repo import (
+    get_all_interactions as _db_get_all,
+    save_interaction as _db_save,
+)
 
 _now = datetime.now(UTC)
 
@@ -156,6 +161,13 @@ class InteractionAdapter(BaseServiceAdapter):
     def get_domain(self) -> str:
         return "interaction"
 
+    def _load_db_items(self) -> list[dict[str, Any]]:
+        try:
+            with get_sync_session() as session:
+                return _db_get_all(session)
+        except Exception:
+            return []
+
     def list(
         self,
         type: str | None = None,
@@ -165,7 +177,11 @@ class InteractionAdapter(BaseServiceAdapter):
         page: int = 1,
         limit: int = 12,
     ) -> ApiResponse:
-        items = MOCK_INTERACTIONS
+        items = list(MOCK_INTERACTIONS)
+        try:
+            items.extend(self._load_db_items())
+        except Exception:
+            pass
         if type:
             items = [i for i in items if i["type"] == type]
         if status:
@@ -181,7 +197,12 @@ class InteractionAdapter(BaseServiceAdapter):
         return self._success_response(data={"items": items[start:start + limit], "total": total})
 
     def get_by_id(self, interaction_id: str) -> ApiResponse:
-        for item in MOCK_INTERACTIONS:
+        all_items: list[dict[str, Any]] = list(MOCK_INTERACTIONS)
+        try:
+            all_items.extend(self._load_db_items())
+        except Exception:
+            pass
+        for item in all_items:
             if item["id"] == interaction_id:
                 return self._success_response(data=item)
         return self._success_response(data=None)
@@ -191,7 +212,11 @@ class InteractionAdapter(BaseServiceAdapter):
         customer_id: str | None = None,
         type: str | None = None,
     ) -> ApiResponse:
-        items = MOCK_INTERACTIONS
+        items: list[dict[str, Any]] = list(MOCK_INTERACTIONS)
+        try:
+            items.extend(self._load_db_items())
+        except Exception:
+            pass
         if customer_id:
             items = [i for i in items if i["customerId"] == customer_id]
         if type:
